@@ -55,6 +55,7 @@ jobs:
           minor += 1
           patch = 0
           new_version = f"{major}.{minor}.{patch}"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
   
    
       - name: Create Release
@@ -63,8 +64,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.semver.outputs.patch }}
-          release_name: ${{ github.event.inputs.enviro }}_${{ steps.semver.outputs.patch }}
+          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.inc-version.outputs.new_version }}
+          release_name: ${{ github.event.inputs.enviro }}_${{ steps.inc-version.outputs.new_version }}
           body: |
             Changes in this Release
             - First Change
