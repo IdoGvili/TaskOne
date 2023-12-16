@@ -40,11 +40,22 @@ jobs:
           echo "Latest release version is $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
   
-      - name: Get next minor version
-        id: semver
-        uses: 'WyriHaximus/github-action-next-semvers@v1'
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          version: ${{ steps.get-version.outputs.VERSION }}
+          python-version: 3.x
+
+      - name: Increment Version
+        id: inc-version
+        run: |
+          python3 - <<EOF
+          import re
+          
+          major, minor, patch = map(int, "${{ steps.get-version.outputs.VERSION }}".split('.'))
+          minor += 1
+          patch = 0
+          new_version = f"{major}.{minor}.{patch}"
+  
    
       - name: Create Release
         id: create_release
