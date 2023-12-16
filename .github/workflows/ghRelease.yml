@@ -39,6 +39,11 @@ jobs:
   
           echo "Latest release version is $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          IFS='.' read -r -a version_array <<< "$VERSION"
+          ((version_array[2]++))
+          NEW_VERSION="${version_array[0]}.${version_array[1]}.${version_array[2]}"
+          echo "New version is $NEW_VERSION"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
    
       - name: Create Release
         id: create_release
