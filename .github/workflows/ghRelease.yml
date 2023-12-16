@@ -51,14 +51,14 @@ jobs:
           python3 - <<EOF
           import re
           
-          major, minor, patch = map(int, ${{ steps.get-version.outputs.VERSION }}.split('.'))
+          major, minor, patch = map(int, "${{ steps.get-version.outputs.VERSION }}".split('.'))
           minor += 1
           patch = 0
           echo minor
           echo patch
           echo major
-          new_version = f"{major}.{minor}.{patch}"
-          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+          NEW_VERSION = f"{major}.{minor}.{patch}"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
   
    
       - name: Create Release
@@ -67,8 +67,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.inc-version.outputs.new_version }}
-          release_name: ${{ github.event.inputs.enviro }}_${{ steps.inc-version.outputs.new_version }}
+          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.inc-version.outputs.NEW_VERSION }}
+          release_name: ${{ github.event.inputs.enviro }}_${{ steps.inc-version.outputs.NEW_VERSION }}
           body: |
             Changes in this Release
             - First Change
