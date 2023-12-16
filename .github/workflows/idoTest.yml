@@ -43,7 +43,7 @@ jobs:
         run: |
           echo HELLOWWWWWWWWWW
           echo ${{ github.event.inputs.name }}
-          echo "FINAL_INPUT = ${in_tag}_${in_ver} ${{ github.event.inputs.name }}" >> $GITHUB_ENV
+          echo "FINAL_INPUT = ${in_tag}_${in_ver}" >> $GITHUB_ENV
           FINAL_INPUT="${in_tag}_${in_ver}"
           echo "FINAL_INPUT = $FINAL_INPUT"
 
