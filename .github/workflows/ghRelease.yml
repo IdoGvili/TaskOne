@@ -57,7 +57,7 @@ jobs:
           echo minor
           echo patch
           echo major
-          NEW_VERSION = f"{major}.{minor}.{patch}"
+          NEW_VERSION = 1.2.3
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
   
    
