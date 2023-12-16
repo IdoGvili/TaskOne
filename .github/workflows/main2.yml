@@ -42,7 +42,7 @@ jobs:
         echo "::set-output name=version::$VERSION"
         git config user.name "${{ github.actor }}"
         git config user.email "${{ github.actor }}@users.noreply.github.com"
-        TAG_NAME="v3.2.$(git rev-list --count HEAD)"
+        TAG_NAME="v3.4.$(git rev-list --count HEAD)"
         git tag $TAG_NAME -m "Version $TAG_NAME"
         git push origin $TAG_NAME
 
@@ -66,8 +66,14 @@ jobs:
         fi
 
     - name: Create Release
-      run: |
-          gh release create $TAG_NAME ./dist/* --notes "Release $TAG_NAME"
-          
+      uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      with:
+        tag_name: ${{ env.TAG_NAME }}
+        release_name: Release ${{ env.TAG_NAME }}
+        body: |
+          Release ${{ env.TAG_NAME }}
+
+          Add release notes here.
+
