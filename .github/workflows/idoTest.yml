@@ -44,7 +44,7 @@ jobs:
           echo HELLOWWWWWWWWWW
           echo ${{ github.event.inputs.name }}
           echo "FINAL_INPUT = ${in_tag}_${in_ver}" >> $GITHUB_ENV
-          FINAL_INPUT="${in_tag}_${in_ver}"
+          FINAL_INPUT="${{ github.event.inputs.name }}"
           echo "FINAL_INPUT = $FINAL_INPUT"
 
           if [[ $FINAL_INPUT == test_* ]]; then
