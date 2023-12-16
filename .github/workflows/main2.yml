@@ -39,4 +39,4 @@ jobs:
 
     - name: Use the latest release version
       run: |
-        echo "Using latest release version: $VERSION"
+        echo "Using latest release version: ${{ env.version }}"
