@@ -1,4 +1,3 @@
-
 on:
   workflow_dispatch:
     branches:
@@ -8,11 +7,11 @@ on:
     inputs:
       enviro:
         type: choice
-        description: enviroment
+        description: environment
         options: 
-        - test
-        - staging
-        - production
+          - test
+          - staging
+          - production
 
 name: Create Release
 
@@ -39,15 +38,15 @@ jobs:
           fi
   
           echo "Latest release version is $VERSION"
-          echo "::set-output name=version::$VERSION"      
+   
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.enviro }}
-          release_name: ${{ github.event.inputs.enviro }}
+          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.get-version.outputs.VERSION }}
+          release_name: ${{ github.event.inputs.enviro }}_${{ steps.get-version.outputs.VERSION }}
           body: |
             Changes in this Release
             - First Change
