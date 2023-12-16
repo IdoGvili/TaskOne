@@ -41,6 +41,7 @@ jobs:
       # Default env vars
       - name: Set env
         with:
+          uses: actions/upload-artifact@v2
           name: ${{github.ref_name}}
           path: Release
           run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
