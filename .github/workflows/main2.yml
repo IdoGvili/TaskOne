@@ -7,12 +7,16 @@ jobs:
   get-latest-release-version:
     runs-on: ubuntu-latest
 
+    outputs:
+      env:
+        RELEASE_VERSION: ${{ steps.extract-version.outputs.version }}
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
 
     - name: Get latest release tag and extract version
-      id: get-version
+      id: extract-version
       run: |
         TAG=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           https://api.github.com/repos/${{ github.repository }}/releases/latest \
@@ -27,7 +31,7 @@ jobs:
         fi
 
         echo "Latest release version is $VERSION"
-        echo "::set-output name=version::$VERSION"
+        echo "version=$VERSION" >> $GITHUB_ENV
 
   your-other-job:
     needs: get-latest-release-version
@@ -39,4 +43,4 @@ jobs:
 
     - name: Use the latest release version
       run: |
-        echo "Using latest release version: ${{ needs.get-latest-release-version.outputs.version }}"
+        echo "Using latest release version: $RELEASE_VERSION"
