@@ -1,53 +1,24 @@
-name: "idoTestlatest"
+name: Release Workflow
 
 on:
   workflow_dispatch:
-    branches:
-      - master
-      - develop
-      - IdoGvili-patch-1
-    inputs:
-      name:
-        type: choice
-        description: Who to greet
-        options: 
-        - monalisa
-        - cschleiden
-      message:
-        required: true
-      in_tag:
-        description: 'release tag'
-        required: true
-        default: 'test'
-      in_ver:
-        description: 'release version'
-        required: true
-        default: '1.0'
 
 jobs:
-  idoReleseas:
-    name: idoReleseas
+  get-latest-release-version:
     runs-on: ubuntu-latest
-   # strategy:
-   #   matrix:
-   #     service:
-   #       - engage
-   #       - engage-tenant
-   #       - engage-admin
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Get latest release tag
-      id: get-tag
+    - name: Get latest release tag and extract version
+      id: get-version
       run: |
         TAG=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           https://api.github.com/repos/${{ github.repository }}/releases/latest \
           | jq -r .tag_name)
-        echo "Latest release tag is $TAG"
-        echo "$TAG"
 
+        # Extract version using regular expression
         if [[ "$TAG" =~ (test|staging|production)_([0-9]+\.[0-9]+\.[0-9]+) ]]; then
           VERSION="${BASH_REMATCH[2]}"
         else
@@ -57,16 +28,14 @@ jobs:
 
         echo "Latest release version is $VERSION"
         echo "$VERSION"
-      # Default env vars
 
-      - name: Assign default GitHub env variables
+    - name: Assign default GitHub env variables
         run: |
           echo HELLOWWWWWWWWWW
           echo ${{ github.event.inputs.name }}
           echo "FINAL_INPUT = ${in_tag}_${in_ver} ${{ github.event.inputs.name }}" >> $GITHUB_ENV
-          FINAL_INPUT="${in_tag}_${in_ver}"
+          FINAL_INPUT="$VERSION"
           echo "FINAL_INPUT = $FINAL_INPUT"
-
           if [[ $FINAL_INPUT == test_* ]]; then
             echo environment="test" >> $GITHUB_ENV
             echo distId="E333ZBF8OB0KGL" >> $GITHUB_ENV
@@ -81,7 +50,7 @@ jobs:
             echo environment="production" >> $GITHUB_ENV
             echo distId="E6TVK39UORE10" >> $GITHUB_ENV
             echo distUrl="https://d34b54r33pmp3l.cloudfront.net" >> $GITHUB_ENV
-  
+
           fi
           echo  $FINAL_INPUT
           echo  $GITHUB_ENV
