@@ -53,6 +53,7 @@ jobs:
             if [[ $minor -eq 9 ]]; then
               minor=0
               ((major++))
+            fi
           else
             ((patch++))
           fi
