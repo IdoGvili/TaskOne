@@ -27,7 +27,7 @@ jobs:
         fi
 
         echo "Latest release version is $VERSION"
-        echo "::set-output name=version::$VERSION"
+        echo "version=$VERSION" >> $GITHUB_ENV
 
   your-other-job:
     needs: get-latest-release-version
@@ -39,4 +39,4 @@ jobs:
 
     - name: Use the latest release version
       run: |
-        echo "Using latest release version: ${{ needs.get-latest-release-version.outputs.version }}"
+        echo "Using latest release version: $RELEASE_VERSION"
