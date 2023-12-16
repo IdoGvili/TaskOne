@@ -40,26 +40,27 @@ jobs:
           echo "Latest release version is $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
   
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.x
+jobs:
+  example-job:
+    runs-on: ubuntu-latest
 
-      - name: Increment Version
-        id: inc-version
-        run: |
-          python3 - <<EOF
-          import re
-          
-          major, minor, patch = map(int, "${{ steps.get-version.outputs.VERSION }}".split('.'))
-          minor += 1
-          patch = 0
-          echo minor
-          echo patch
-          echo major
-          NEW_VERSION = 1.2.3
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
-  
+    steps:
+    - name: Get version components
+      id: get-version
+      run: echo "VERSION=1.2.9" >> $GITHUB_ENV
+
+    - name: Extract version components
+      run: |
+       
+        IFS='.' read -ra version_components <<< "${{ steps.inc-version.outputs.NEW_VERSION }}"
+        major=${version_components[0]}
+        minor=${version_components[1]}
+        patch=${version_components[2]}
+
+        echo "Major: $major"
+        echo "Minor: $minor"
+        echo "Patch: $patch"
+
    
       - name: Create Release
         id: create_release
