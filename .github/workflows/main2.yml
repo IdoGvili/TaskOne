@@ -74,4 +74,6 @@ jobs:
           Release ${{ env.TAG_NAME }}
 
           Add release notes here.
-
+          
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
