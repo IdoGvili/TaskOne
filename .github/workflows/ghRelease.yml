@@ -42,15 +42,25 @@ jobs:
   
       - name: Extract version components
         run: |
-         
           IFS='.' read -ra version_components <<< "${{ steps.get-version.outputs.VERSION }}"
           major=${version_components[0]}
           minor=${version_components[1]}
           patch=${version_components[2]}
-  
+          if [[ $patch -eq 9 ]]; then
+            patch=0
+            ((minor++))
+            if [[ $minor -eq 9 ]]; then
+              minor=0
+              ((major++))
+            fi
+          else
+            ((patch++))
+          fi
+      
           echo "Major: $major"
           echo "Minor: $minor"
           echo "Patch: $patch"
+
 
    
       - name: Create Release
