@@ -44,6 +44,23 @@ jobs:
           NEW_VERSION="${version_array[0]}.${version_array[1]}.${version_array[2]}"
           echo "New version is $NEW_VERSION"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+  
+      - name: Increment Version
+        run: |
+          python3 - <<EOF
+          import re
+          
+          major, minor, patch = map(int, v${{ steps.get-version.outputs.VERSION }}.split('.'))
+          minor += 1
+          patch = 0
+          new_version = f"{major}.{minor}.{patch}"
+  
+          with open('your_version_file.txt', 'w') as file:
+              file.write(new_version)
    
       - name: Create Release
         id: create_release
