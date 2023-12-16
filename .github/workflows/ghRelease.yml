@@ -30,7 +30,7 @@ jobs:
             | jq -r .tag_name)
   
           # Extract version using regular expression
-          if [[ "$TAG" =~ (test|staging|production)_([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+          if [[ "$TAG" =~ (test|staging|production)_v([0-9]+\.[0-9]+\.[0-9]+) ]]; then
             VERSION="${BASH_REMATCH[2]}"
           else
             echo "Failed to extract version from tag: $TAG"
@@ -71,8 +71,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.updated-version.outputs.NEW_VERSION }}
-          release_name: ${{ github.event.inputs.enviro }}_${{ steps.updated-version.outputs.NEW_VERSION }}
+          tag_name: ${{ github.event.inputs.enviro }}_v${{ steps.updated-version.outputs.NEW_VERSION }}
+          release_name: ${{ github.event.inputs.enviro }}_v${{ steps.updated-version.outputs.NEW_VERSION }}
           body: |
             Changes in this Release
             - First Change
