@@ -40,6 +40,8 @@ jobs:
 
         echo "Latest release version is $VERSION"
         echo "::set-output name=version::$VERSION"
+        git config user.name "${{ github.actor }}"
+        git config user.email "${{ github.actor }}@users.noreply.github.com"
         TAG_NAME="v1.0.$(git rev-list --count HEAD)"
         git tag $TAG_NAME -m "Version $TAG_NAME"
         git push origin $TAG_NAME
