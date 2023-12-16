@@ -42,7 +42,7 @@ jobs:
         echo "::set-output name=version::$VERSION"
         git config user.name "${{ github.actor }}"
         git config user.email "${{ github.actor }}@users.noreply.github.com"
-        TAG_NAME="v2.0.$(git rev-list --count HEAD)"
+        TAG_NAME="v1.0.$(git rev-list --count HEAD)"
         git tag $TAG_NAME -m "Version $TAG_NAME"
         git push origin $TAG_NAME
 
@@ -64,3 +64,14 @@ jobs:
           echo distUrl="https://d34b54r33pmp3l.cloudfront.net" >> $GITHUB_ENV
   
         fi
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ TAG_NAME }}
+        release_name: Release ${{ TAG_NAME }}
+        body: |
+          Release ${{ TAG_NAME }}
+
+          Add release notes here.
+
