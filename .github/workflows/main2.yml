@@ -27,30 +27,16 @@ jobs:
         fi
 
         echo "Latest release version is $VERSION"
-        echo "$VERSION"
+        echo "::set-output name=version::$VERSION"
 
-    - name: Assign default GitHub env variables
-        run: |
-          echo HELLOWWWWWWWWWW
-          echo ${{ github.event.inputs.name }}
-          echo "FINAL_INPUT = ${in_tag}_${in_ver} ${{ github.event.inputs.name }}" >> $GITHUB_ENV
-          FINAL_INPUT="$VERSION"
-          echo "FINAL_INPUT = $FINAL_INPUT"
-          if [[ $FINAL_INPUT == test_* ]]; then
-            echo environment="test" >> $GITHUB_ENV
-            echo distId="E333ZBF8OB0KGL" >> $GITHUB_ENV
-            echo distUrl="https://d13imkh013nlqg.cloudfront.net" >> $GITHUB_ENV
-      
-          elif [[ $FINAL_INPUT == staging_* ]]; then
-            echo environment="staging" >> $GITHUB_ENV
-            echo distId="E3DIJQC07QF41Q" >> $GITHUB_ENV
-            echo distUrl="https://d3tn5qru9slb7c.cloudfront.net" >> $GITHUB_ENV
+  your-other-job:
+    needs: get-latest-release-version
+    runs-on: ubuntu-latest
 
-          elif [[ $FINAL_INPUT == production_* ]]; then
-            echo environment="production" >> $GITHUB_ENV
-            echo distId="E6TVK39UORE10" >> $GITHUB_ENV
-            echo distUrl="https://d34b54r33pmp3l.cloudfront.net" >> $GITHUB_ENV
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-          fi
-          echo  $FINAL_INPUT
-          echo  $GITHUB_ENV
+    - name: Use the latest release version
+      run: |
+        echo "Using latest release version: ${{ needs.get-latest-release-version.outputs.version }}"
