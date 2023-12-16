@@ -49,18 +49,11 @@ jobs:
         with:
           python-version: 3.x
   
-      - name: Increment Version
-        run: |
-          python3 - <<EOF
-          import re
-          
-          major, minor, patch = map(int, ${{ steps.get-version.outputs.VERSION }}.split('.'))
-          minor += 1
-          patch = 0
-          new_version = f"{major}.{minor}.{patch}"
-  
-          with open('your_version_file.txt', 'w') as file:
-              file.write(new_version)
+      - name: Get next minor version
+        id: semver
+        uses: 'WyriHaximus/github-action-next-semvers@v1'
+        with:
+          version: ${{ steps.get-version.outputs.VERSION }}
    
       - name: Create Release
         id: create_release
@@ -68,8 +61,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.get-version.outputs.VERSION }}
-          release_name: ${{ github.event.inputs.enviro }}_${{ steps.get-version.outputs.VERSION }}
+          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.semver.outputs.patch }}
+          release_name: ${{ github.event.inputs.enviro }}_${{ steps.semver.outputs.patch }}
           body: |
             Changes in this Release
             - First Change
