@@ -66,14 +66,8 @@ jobs:
         fi
 
     - name: Create Release
-      uses: actions/create-release@v1
-      with:
-        tag_name: ${{ env.TAG_NAME }}
-        release_name: Release ${{ env.TAG_NAME }}
-        body: |
-          Release ${{ env.TAG_NAME }}
-
-          Add release notes here.
+      run: |
+          gh release create $TAG_NAME ./dist/* --notes "Release $TAG_NAME"
           
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
