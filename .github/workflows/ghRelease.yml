@@ -54,7 +54,7 @@ jobs:
           python3 - <<EOF
           import re
           
-          major, minor, patch = map(int, v${{ steps.get-version.outputs.VERSION }}.split('.'))
+          major, minor, patch = map(int, ${{ steps.get-version.outputs.VERSION }}.split('.'))
           minor += 1
           patch = 0
           new_version = f"{major}.{minor}.{patch}"
