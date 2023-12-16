@@ -1,6 +1,6 @@
 name: "otherTest3"
 on:
-  push:
+  workflow_dispatch:
     tags:
       - 'v*.*.*'
 jobs:
