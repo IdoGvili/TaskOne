@@ -1,4 +1,4 @@
-name: "otherTest"
+name: "TheRealOne"
 
 on:
   workflow_dispatch:
@@ -7,24 +7,41 @@ on:
       - develop
       - IdoGvili-patch-1
     inputs:
-      name:
+      enviro:
         type: choice
-        description: Who to greet
+        description: enviroment
         options: 
-        - monalisa
-        - cschleiden
-      message:
-        required: true
-      in_tag:
-        description: 'release tag'
-        required: true
-        default: 'test'
-      in_ver:
-        description: 'release version'
-        required: true
-        default: '1.0'
+        - test
+        - staging
+        - production
 
 jobs:
+  get-latest-release-tag:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Get latest release tag
+      id: get-tag
+      run: |
+        TAG=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/releases/latest \
+          | jq -r .tag_name)
+        echo "Latest release tag is $TAG"
+        echo "$TAG"
+
+        if [[ "$TAG" =~ (test|staging|production)_([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+          VERSION="${BASH_REMATCH[2]}"
+        else
+          echo "Failed to extract version from tag: $TAG"
+          exit 1
+        fi
+        
+        echo "Latest release version is $VERSION"          
+        echo "$VERSION"
+          
   idoReleseas:
     name: idoReleseas
     runs-on: ubuntu-latest
@@ -40,20 +57,12 @@ jobs:
 
       # Default env vars
       
-      - name: GitHub Tag Name example
-        run: |
-          echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
-          echo "Tag name from github.ref_name: ${{  github.ref_name }}"
-      - name: Test
-        run: |
-          echo $RELEASE_VERSION
-          echo ${{ env.RELEASE_VERSION }}
       - name: Assign default GitHub env variables
         run: |
           echo HELLOWWWWWWWWWW
           echo ${{ github.event.inputs.name }}
-          echo "FINAL_INPUT = ${in_tag}_${in_ver} ${{ github.event.inputs.name }}" >> $GITHUB_ENV
-          FINAL_INPUT="${in_tag}_${in_ver}"
+          echo "FINAL_INPUT = ${{ github.event.inputs.enviro }}" >> $GITHUB_ENV
+          FINAL_INPUT="${{ github.event.inputs.enviro }}"
           echo "FINAL_INPUT = $FINAL_INPUT"
 
           if [[ $FINAL_INPUT == test_* ]]; then
