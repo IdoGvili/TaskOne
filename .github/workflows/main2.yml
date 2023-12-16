@@ -27,7 +27,7 @@ jobs:
         fi
 
         echo "Latest release version is $VERSION"
-        echo "version=$VERSION" >> $GITHUB_ENV
+        echo version=$VERSION >> $GITHUB_ENV
 
   your-other-job:
     needs: get-latest-release-version
