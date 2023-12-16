@@ -1,0 +1,72 @@
+name: "idoTest"
+
+on:
+  workflow_dispatch:
+    branches:
+      - master
+      - develop
+      - IdoGvili-patch-1
+    inputs:
+      name:
+        type: choice
+        description: Who to greet
+        options: 
+        - monalisa
+        - cschleiden
+      message:
+        required: true
+      in_tag:
+        description: 'release tag'
+        required: true
+        default: 'test'
+      in_ver:
+        description: 'release version'
+        required: true
+        default: '1.0'
+
+jobs:
+  idoReleseas:
+    name: idoReleseas
+    runs-on: ubuntu-latest
+   # strategy:
+   #   matrix:
+   #     service:
+   #       - engage
+   #       - engage-tenant
+   #       - engage-admin
+
+    steps:
+
+      # Default env vars
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Test
+        run: |
+          echo $RELEASE_VERSION
+          echo ${{ env.RELEASE_VERSION }}
+      - name: Assign default GitHub env variables
+        run: |
+          echo HELLOWWWWWWWWWW
+          echo ${{ github.event.inputs.name }}
+          echo "FINAL_INPUT = ${in_tag}_${in_ver} ${{ github.event.inputs.name }}" >> $GITHUB_ENV
+          FINAL_INPUT="${in_tag}_${in_ver}"
+          echo "FINAL_INPUT = $FINAL_INPUT"
+
+          if [[ $FINAL_INPUT == test_* ]]; then
+            echo environment="test" >> $GITHUB_ENV
+            echo distId="E333ZBF8OB0KGL" >> $GITHUB_ENV
+            echo distUrl="https://d13imkh013nlqg.cloudfront.net" >> $GITHUB_ENV
+      
+          elif [[ $FINAL_INPUT == staging_* ]]; then
+            echo environment="staging" >> $GITHUB_ENV
+            echo distId="E3DIJQC07QF41Q" >> $GITHUB_ENV
+            echo distUrl="https://d3tn5qru9slb7c.cloudfront.net" >> $GITHUB_ENV
+
+          elif [[ $FINAL_INPUT == production_* ]]; then
+            echo environment="production" >> $GITHUB_ENV
+            echo distId="E6TVK39UORE10" >> $GITHUB_ENV
+            echo distUrl="https://d34b54r33pmp3l.cloudfront.net" >> $GITHUB_ENV
+  
+          fi
+          echo  $FINAL_INPUT
+          echo  $GITHUB_ENV
