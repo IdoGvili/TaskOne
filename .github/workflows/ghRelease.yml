@@ -54,6 +54,9 @@ jobs:
           major, minor, patch = map(int, "${{ steps.get-version.outputs.VERSION }}".split('.'))
           minor += 1
           patch = 0
+          echo minor
+          echo patch
+          echo major
           new_version = f"{major}.{minor}.{patch}"
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
   
