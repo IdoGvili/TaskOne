@@ -23,6 +23,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Get latest release tag and extract version
+        id: get-version
+        run: |
+          TAG=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/latest \
+            | jq -r .tag_name)
+  
+          # Extract version using regular expression
+          if [[ "$TAG" =~ (test|staging|production)_([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            VERSION="${BASH_REMATCH[2]}"
+          else
+            echo "Failed to extract version from tag: $TAG"
+            exit 1
+          fi
+  
+          echo "Latest release version is $VERSION"
+          echo "::set-output name=version::$VERSION"      
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
