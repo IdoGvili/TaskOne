@@ -41,6 +41,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
   
       - name: Extract version components
+        id: updated-version
         run: |
           IFS='.' read -ra version_components <<< "${{ steps.get-version.outputs.VERSION }}"
           major=${version_components[0]}
@@ -60,7 +61,8 @@ jobs:
           echo "Major: $major"
           echo "Minor: $minor"
           echo "Patch: $patch"
-
+          NEW_VERSION="$major.$minor.$patch"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
 
    
       - name: Create Release
@@ -69,8 +71,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.get-version.outputs.VERSION }}
-          release_name: ${{ github.event.inputs.enviro }}_${{ steps.get-version.outputs.VERSION }}
+          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.updated-version.outputs.NEW_VERSION }}
+          release_name: ${{ github.event.inputs.enviro }}_${{ steps.updated-version.outputs.NEW_VERSION }}
           body: |
             Changes in this Release
             - First Change
