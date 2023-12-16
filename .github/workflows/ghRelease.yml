@@ -50,12 +50,12 @@ jobs:
           if [[ $patch -eq 9 ]]; then
             patch=0
             ((minor++))
-            if [[ $minor -eq 9 ]]; then
+            if [[ $minor -eq 10 ]]; then
               minor=0
               ((major++))
             fi
           else
-            ((patch++))
+            patch=$((patch + 1))
           fi
       
           echo "Major: $major"
