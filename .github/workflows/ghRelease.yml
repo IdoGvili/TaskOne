@@ -40,26 +40,17 @@ jobs:
           echo "Latest release version is $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
   
-jobs:
-  example-job:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Get version components
-      id: get-version
-      run: echo "VERSION=1.2.9" >> $GITHUB_ENV
-
-    - name: Extract version components
-      run: |
-       
-        IFS='.' read -ra version_components <<< "${{ steps.inc-version.outputs.NEW_VERSION }}"
-        major=${version_components[0]}
-        minor=${version_components[1]}
-        patch=${version_components[2]}
-
-        echo "Major: $major"
-        echo "Minor: $minor"
-        echo "Patch: $patch"
+      - name: Extract version components
+        run: |
+         
+          IFS='.' read -ra version_components <<< "${{ steps.inc-version.outputs.VERSION }}"
+          major=${version_components[0]}
+          minor=${version_components[1]}
+          patch=${version_components[2]}
+  
+          echo "Major: $major"
+          echo "Minor: $minor"
+          echo "Patch: $patch"
 
    
       - name: Create Release
@@ -68,8 +59,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.inc-version.outputs.NEW_VERSION }}
-          release_name: ${{ github.event.inputs.enviro }}_${{ steps.inc-version.outputs.NEW_VERSION }}
+          tag_name: ${{ github.event.inputs.enviro }}_${{ steps.inc-version.outputs.VERSION }}
+          release_name: ${{ github.event.inputs.enviro }}_${{ steps.inc-version.outputs.VERSION }}
           body: |
             Changes in this Release
             - First Change
