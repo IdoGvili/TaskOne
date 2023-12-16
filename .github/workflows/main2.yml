@@ -40,20 +40,23 @@ jobs:
 
         echo "Latest release version is $VERSION"
         echo "::set-output name=version::$VERSION"
+        TAG_NAME="v1.0.$(git rev-list --count HEAD)"
+        git tag $TAG_NAME -m "Version $TAG_NAME"
+        git push origin $TAG_NAME
 
         echo forced=$(if [[ ${{ github.ref_name }} == *-f ]]; then echo "true"; else echo "false"; fi) >> $GITHUB_ENV
 
-        if [[ ${{ github.event.inputs.enviro }} == test ]]; then
+        if [[ ${{ github.event.inputs.enviro }} == test_* ]]; then
           echo environment="test" >> $GITHUB_ENV
           echo distId="E333ZBF8OB0KGL" >> $GITHUB_ENV
           echo distUrl="https://d13imkh013nlqg.cloudfront.net" >> $GITHUB_ENV
 
-        elif [[ ${{ github.event.inputs.enviro }} == staging ]]; then
+        elif [[ ${{ github.event.inputs.enviro }} == staging_* ]]; then
           echo environment="staging" >> $GITHUB_ENV
           echo distId="E3DIJQC07QF41Q" >> $GITHUB_ENV
           echo distUrl="https://d3tn5qru9slb7c.cloudfront.net" >> $GITHUB_ENV
 
-        elif [[ ${{ github.event.inputs.enviro }} == production ]]; then
+        elif [[ ${{ github.event.inputs.enviro }} == production_* ]]; then
           echo environment="production" >> $GITHUB_ENV
           echo distId="E6TVK39UORE10" >> $GITHUB_ENV
           echo distUrl="https://d34b54r33pmp3l.cloudfront.net" >> $GITHUB_ENV
