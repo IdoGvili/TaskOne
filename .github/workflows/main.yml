@@ -16,8 +16,16 @@ on:
         - production
 
 jobs:
-  get-latest-release-tag:
+     
+  idoReleseas:
+    name: idoReleseas
     runs-on: ubuntu-latest
+   # strategy:
+   #   matrix:
+   #     service:
+   #       - engage
+   #       - engage-tenant
+   #       - engage-admin
 
     steps:
     - name: Checkout repository
@@ -41,18 +49,6 @@ jobs:
         
         echo "Latest release version is $VERSION"          
         echo "$VERSION"
-          
-  idoReleseas:
-    name: idoReleseas
-    runs-on: ubuntu-latest
-   # strategy:
-   #   matrix:
-   #     service:
-   #       - engage
-   #       - engage-tenant
-   #       - engage-admin
-
-    steps:
     
 
       # Default env vars
