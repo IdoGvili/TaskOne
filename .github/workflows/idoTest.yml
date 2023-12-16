@@ -36,9 +36,29 @@ jobs:
    #       - engage-admin
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
+    - name: Get latest release tag
+      id: get-tag
+      run: |
+        TAG=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/releases/latest \
+          | jq -r .tag_name)
+        echo "Latest release tag is $TAG"
+        echo "$TAG"
+
+        if [[ "$TAG" =~ (test|staging|production)_([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+          VERSION="${BASH_REMATCH[2]}"
+        else
+          echo "Failed to extract version from tag: $TAG"
+          exit 1
+        fi
+
+        echo "Latest release version is $VERSION"
+        echo "$VERSION"
       # Default env vars
-
+    
       - name: Assign default GitHub env variables
         run: |
           echo HELLOWWWWWWWWWW
