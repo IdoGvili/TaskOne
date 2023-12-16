@@ -1,77 +1,35 @@
-name: Release Workflow
+name: Create Release
 
 on:
-  workflow_dispatch:
+  push:
     branches:
-      - master
-      - develop
-      - IdoGvili-patch-1
-    inputs:
-      enviro:
-        type: choice
-        description: enviroment
-        options: 
-        - test
-        - staging
-        - production
+      - main  # Change this to your main branch name
 
 jobs:
-  get-latest-release-version:
+  create-release:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-    - name: Get latest release tag and extract version
-      id: get-version
-      run: |
-        TAG=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          https://api.github.com/repos/${{ github.repository }}/releases/latest \
-          | jq -r .tag_name)
+      - name: Set up Git
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
 
-        # Extract version using regular expression
-        if [[ "$TAG" =~ (test|staging|production)_([0-9]+\.[0-9]+\.[0-9]+) ]]; then
-          VERSION="${BASH_REMATCH[2]}"
-        else
-          echo "Failed to extract version from tag: $TAG"
-          exit 1
-        fi
+      - name: Create Tag
+        run: |
+          TAG_NAME="v1.0.$(git rev-list --count HEAD)"
+          git tag $TAG_NAME -m "Version $TAG_NAME"
+          git push origin $TAG_NAME --quiet --set-upstream
 
-        echo "Latest release version is $VERSION"
-        echo "::set-output name=version::$VERSION"
-        git config user.name "${{ github.actor }}"
-        git config user.email "${{ github.actor }}@users.noreply.github.com"
-        TAG_NAME="v1.0.$(git rev-list --count HEAD)"
-        git tag $TAG_NAME -m "Version $TAG_NAME"
-        git push origin $TAG_NAME
+      - name: Create Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ TAG_NAME }}
+          release_name: Release ${{ TAG_NAME }}
+          body: |
+            Release ${{ TAG_NAME }}
 
-        echo forced=$(if [[ ${{ github.ref_name }} == *-f ]]; then echo "true"; else echo "false"; fi) >> $GITHUB_ENV
-
-        if [[ ${{ github.event.inputs.enviro }} == test_* ]]; then
-          echo environment="test" >> $GITHUB_ENV
-          echo distId="E333ZBF8OB0KGL" >> $GITHUB_ENV
-          echo distUrl="https://d13imkh013nlqg.cloudfront.net" >> $GITHUB_ENV
-
-        elif [[ ${{ github.event.inputs.enviro }} == staging_* ]]; then
-          echo environment="staging" >> $GITHUB_ENV
-          echo distId="E3DIJQC07QF41Q" >> $GITHUB_ENV
-          echo distUrl="https://d3tn5qru9slb7c.cloudfront.net" >> $GITHUB_ENV
-
-        elif [[ ${{ github.event.inputs.enviro }} == production_* ]]; then
-          echo environment="production" >> $GITHUB_ENV
-          echo distId="E6TVK39UORE10" >> $GITHUB_ENV
-          echo distUrl="https://d34b54r33pmp3l.cloudfront.net" >> $GITHUB_ENV
-  
-        fi
-
-    - name: Create Release
-      uses: actions/create-release@v1
-      with:
-        tag_name: ${{ TAG_NAME }}
-        release_name: Release ${{ TAG_NAME }}
-        body: |
-          Release ${{ TAG_NAME }}
-
-          Add release notes here.
-
+            Add release notes here.
