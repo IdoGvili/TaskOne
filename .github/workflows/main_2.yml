@@ -11,6 +11,7 @@ on:
           - test
           - staging
           - production
+          - ALL
 
       in_tag:
         description: 'release tag'
@@ -31,8 +32,40 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}
-          release_name: ${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}
+          tag_name: ${{ github.event.inputs.enviro == 'ALL' ? 'test' : github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}
+          release_name: ${{ github.event.inputs.enviro == 'ALL' ? 'test' : github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: false
+          prerelease: false
+          
+      - name: Create Staging Release
+        if: ${{ github.event.inputs.enviro == 'ALL' }}
+        id: create_staging_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: staging_v${{ github.event.inputs.in_tag }}
+          release_name: staging_v${{ github.event.inputs.in_tag }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: false
+          prerelease: false
+          
+      - name: Create Production Release
+        if: ${{ github.event.inputs.enviro == 'ALL' }}
+        id: create_production_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: production_v${{ github.event.inputs.in_tag }}
+          release_name: production_v${{ github.event.inputs.in_tag }}
           body: |
             Changes in this Release
             - First Change
