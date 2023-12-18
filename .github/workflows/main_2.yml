@@ -3,15 +3,17 @@ on:
     branches:
       - master
       - develop
-      
+
     inputs:
+      enviro:
+        type: choice
+        description: environment
+        options: 
+          - test
+          - staging
+          - production      
       in_tag:
         description: 'release version'
-        required: true
-        default: '1.0'
-      
-      enviro:
-        description: 'release enviroment'
         required: true
         default: '1.0'
 
