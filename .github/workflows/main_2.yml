@@ -11,7 +11,8 @@ on:
         options: 
           - test
           - staging
-          - production      
+          - production
+          - ALL
       in_tag:
         description: 'release version'
         required: true
