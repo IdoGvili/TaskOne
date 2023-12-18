@@ -12,6 +12,11 @@ on:
           - staging
           - production
 
+      in_tag:
+        description: 'release tag'
+        required: true
+        default: '1.0'
+
 name: Create Release2
 
 jobs:
@@ -19,56 +24,15 @@ jobs:
     name: Create Release2
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Get latest release tag and extract version
-        id: get-version
-        run: |
-          TAG=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/releases/latest \
-            | jq -r .tag_name)
-  
-          # Extract version using regular expression
-          if [[ "$TAG" =~ (test|staging|production)_v([0-9]+\.[0-9]+\.[0-9]+) ]]; then
-            VERSION="${BASH_REMATCH[2]}"
-          else
-            echo "Failed to extract version from tag: $TAG"
-            exit 1
-          fi
-  
-          echo "Latest release version is $VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-  
-      - name: Extract version components
-        id: updated-version
-        run: |
-          IFS='.' read -ra version_components <<< "${{ steps.get-version.outputs.VERSION }}"
-          major=${version_components[0]}
-          minor=${version_components[1]}
-          patch=${version_components[2]}
-          if [[ $patch -eq 9 ]]; then
-            patch=0
-            ((minor++))
-            if [[ $minor -eq 10 ]]; then
-              minor=0
-              ((major++))
-            fi
-          else
-            patch=$((patch + 1))
-          fi
-      
-          NEW_VERSION="$major.$minor.$patch"
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-   
+    
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.enviro }}_v${{ steps.updated-version.outputs.NEW_VERSION }}
-          release_name: ${{ github.event.inputs.enviro }}_v${{ steps.updated-version.outputs.NEW_VERSION }}
+          tag_name: ${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}
+          release_name: ${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}
           body: |
             Changes in this Release
             - First Change
