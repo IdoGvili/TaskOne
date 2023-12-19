@@ -1,0 +1,49 @@
+name: "new-Release"
+
+on:
+  workflow_dispatch:
+    branches:
+      - master
+      - develop
+      - IdoGvili-patch-1
+    inputs:
+      enviro:
+        type: choice
+        description: environment
+        options: 
+          - test
+          - staging
+          - production
+
+jobs:
+  release:
+    name: "new-Release"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Determine tag"
+        id: 'tag_id'
+        run: TAG = "${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}"
+
+      - name: "Create release"
+        uses: "actions/github-script@v6"
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          script: |
+            try {
+              const response = await github.rest.repos.createRelease({
+                draft: false,
+                generate_release_notes: true,
+                name: ${{ steps.tag_id.outputs.TAG }},
+                owner: context.repo.owner,
+                prerelease: false,
+                repo: context.repo.repo,
+                tag_name: ${{ steps.tag_id.outputs.TAG }},
+              });
+
+              core.exportVariable('RELEASE_ID', response.data.id);
+              core.exportVariable('RELEASE_UPLOAD_URL', response.data.upload_url);
+            } catch (error) {
+              core.setFailed(error.message);
+            }
