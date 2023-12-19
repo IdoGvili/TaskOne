@@ -14,6 +14,10 @@ on:
           - test
           - staging
           - production
+      in_tag:
+        description: 'release version'
+        required: true
+        default: '1.0'
 
 jobs:
   release:
@@ -24,7 +28,9 @@ jobs:
     steps:
       - name: "Determine tag"
         id: 'tag_id'
-        run: TAG = "${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}"
+        run: |
+         TAG = "${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}"
+         echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
       - name: "Create release"
         uses: "actions/github-script@v6"
