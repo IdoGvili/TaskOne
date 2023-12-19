@@ -29,7 +29,7 @@ jobs:
       - name: "Determine tag"
         id: 'tag_id'
         run: |
-         TAG = "${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}"
+         TAG = ${"${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}"}
          echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
       - name: "Create release"
