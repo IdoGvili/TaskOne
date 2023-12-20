@@ -39,7 +39,7 @@ jobs:
           -H "Accept: application/vnd.github+json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
-          https://api.github.com/repos/vi-technologies/frontend-vi-engage/releases \
+          https://api.github.com/repos/IdoGvili/TaskOne/releases \
           -d "{\"tag_name\":\"${{ steps.tag_id.outputs.TAG }}\",\"target_commitish\":\"master\",\"name\":\"${{ steps.tag_id.outputs.TAG }}\",\"body\":\"Description of the release\",\"draft\":false,\"prerelease\":false,\"generate_release_notes\":false}"
     
         env:
