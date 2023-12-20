@@ -29,24 +29,19 @@ jobs:
          TAG=${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}
          echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
-      - name: "Create release"
-        uses: "actions/github-script@v6"
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          script: |
-            try {
-              const response = await github.rest.repos.createRelease({
-                draft: false,
-                generate_release_notes: true,
-                name: ${{ steps.tag_id.outputs.TAG }},
-                owner: context.repo.owner,
-                prerelease: false,
-                repo: context.repo.repo,
-                tag_name: ${{ steps.tag_id.outputs.TAG }},
-              });
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-              core.exportVariable('RELEASE_ID', response.data.id);
-              core.exportVariable('RELEASE_UPLOAD_URL', response.data.upload_url);
-            } catch (error) {
-              core.setFailed(error.message);
-            }
+      - name: Create GitHub Release
+        run: |
+          curl -s -X POST \
+            https://api.github.com/repos/vi-technologies/frontend-vi-engage/releases \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -d '${{ steps.tag_id.outputs.TAG }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up release data
+        id: releaseData
+        run: echo "::set-output name=releaseData::{\"tag_name\":\"v1.0.0\",\"name\":\"Release 1.0.0\",\"body\":\"Release notes for version 1.0.0\"}"
