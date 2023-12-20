@@ -8,12 +8,9 @@ on:
       - IdoGvili-patch-1
     inputs:
       enviro:
-        type: choice
-        description: environment
-        options: 
-          - test
-          - staging
-          - production
+        description: 'release version'
+        required: true
+        default: '1.0'
       in_tag:
         description: 'release version'
         required: true
@@ -21,7 +18,7 @@ on:
 
 jobs:
   release:
-    name: "new-Release"
+    name: new-Release
 
     runs-on: "ubuntu-latest"
 
@@ -29,7 +26,7 @@ jobs:
       - name: "Determine tag"
         id: 'tag_id'
         run: |
-         TAG = ${${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}}
+         TAG=${{ github.event.inputs.enviro }}_v${{ github.event.inputs.in_tag }}
          echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
       - name: "Create release"
