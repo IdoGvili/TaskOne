@@ -34,6 +34,7 @@ jobs:
 
       - name: Create GitHub Release
         run: |
+          echo ${{ steps.tag_id.outputs.TAG }}
           curl -L \
           -X POST \
           -H "Accept: application/vnd.github+json" \
