@@ -8,9 +8,13 @@ on:
       - IdoGvili-patch-1
     inputs:
       enviro:
-        description: 'release version'
-        required: true
-        default: '1.0'
+        type: choice
+        description: environment
+        options: 
+          - test
+          - staging
+          - production
+          - ALL
       in_tag:
         description: 'release version'
         required: true
@@ -32,7 +36,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release Not All
+        if: ${{ github.event.inputs.enviro != 'ALL' }}
         run: |
           echo ${{ steps.tag_id.outputs.TAG }}
           curl -L \
@@ -45,6 +50,39 @@ jobs:
     
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release All Three
+        if: ${{ github.event.inputs.enviro == 'ALL' }}
+        run: |
+          echo ${{ steps.tag_id.outputs.TAG }}
+          curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/IdoGvili/TaskOne/releases \
+          -d '{"tag_name":"test_v${{ github.event.inputs.in_tag }}","name":"test_v${{ github.event.inputs.in_tag }}","body":"Description of the release","draft":false,"prerelease":false,"generate_release_notes":false}'
+
+          echo ${{ steps.tag_id.outputs.TAG }}
+          curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/IdoGvili/TaskOne/releases \
+          -d '{"tag_name":"staging_v${{ github.event.inputs.in_tag }}","name":"$staging_v${{ github.event.inputs.in_tag }}","body":"Description of the release","draft":false,"prerelease":false,"generate_release_notes":false}'
+
+          echo ${{ steps.tag_id.outputs.TAG }}
+          curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/IdoGvili/TaskOne/releases \
+          -d '{"tag_name":"production_v${{ github.event.inputs.in_tag }}","name":"$production_v${{ github.event.inputs.in_tag }}","body":"Description of the release","draft":false,"prerelease":false,"generate_release_notes":false}'
+    
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
 
       - name: Set up release data
         id: releaseData
