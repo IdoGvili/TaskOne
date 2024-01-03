@@ -1,81 +1,81 @@
+name: "new-Release"
+
 on:
   workflow_dispatch:
     branches:
       - master
       - develop
-      - IdoGvili-patch-1
     inputs:
-      enviro:
+      environment:
         type: choice
-        description: environment
+        description: Environment
         options: 
           - test
           - staging
-          - production
-
-name: Create Release
+          - ALL
+      version:
+        description: 'Version'
+        required: true
+        default: '1.0'
+      release_description:
+        description: 'Release Description'
+        required: false
+        default: 'Description of the release'
 
 jobs:
-  build:
-    name: Create Release
-    runs-on: ubuntu-latest
+  release:
+    name: Release tags
+
+    runs-on: "ubuntu-latest"
+
     steps:
+      - name: "Determine tag"
+        id: 'tag_id'
+        run: |
+         TAG=${{ github.event.inputs.environment }}_v${{ github.event.inputs.version }}
+         echo "TAG=$TAG" >> $GITHUB_OUTPUT
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Get latest release tag and extract version
-        id: get-version
-        run: |
-          TAG=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/releases/latest \
-            | jq -r .tag_name)
-  
-          # Extract version using regular expression
-          if [[ "$TAG" =~ (test|staging|production)_v([0-9]+\.[0-9]+\.[0-9]+) ]]; then
-            VERSION="${BASH_REMATCH[2]}"
-          else
-            echo "Failed to extract version from tag: $TAG"
-            exit 1
-          fi
-  
-          echo "Latest release version is $VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-  
-      - name: Extract version components
-        id: updated-version
-        run: |
-          IFS='.' read -ra version_components <<< "${{ steps.get-version.outputs.VERSION }}"
-          major=${version_components[0]}
-          minor=${version_components[1]}
-          patch=${version_components[2]}
-          if [[ $patch -eq 9 ]]; then
-            patch=0
-            ((minor++))
-            if [[ $minor -eq 10 ]]; then
-              minor=0
-              ((major++))
-            fi
-          else
-            patch=$((patch + 1))
-          fi
-      
-          echo "Major: $major"
-          echo "Minor: $minor"
-          echo "Patch: $patch"
-          NEW_VERSION="$major.$minor.$patch"
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-   
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Create GitHub Release Not All
+        if: ${{ github.event.inputs.environment != 'ALL' }}
+        run: |
+          echo ${{ steps.tag_id.outputs.TAG }}
+          curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/IdoGvili/TaskOne/releases \
+          -d '{"tag_name":"${{ steps.tag_id.outputs.TAG }}","name":"${{ steps.tag_id.outputs.TAG }}","body":"${{ steps.tag_id.outputs.TAG }} release notes :${{ steps.tag_id.outputs.TAG }} release notes :${{ github.event.inputs.release_description }}","draft":false,"prerelease":false,"generate_release_notes":false}'
+    
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.event.inputs.enviro }}_v${{ steps.updated-version.outputs.NEW_VERSION }}
-          release_name: ${{ github.event.inputs.enviro }}_v${{ steps.updated-version.outputs.NEW_VERSION }}
-          body: |
-            Changes in this Release
-            - First Change
-            - Second Change
-          draft: false
-          prerelease: false
+
+      - name: Create GitHub Release All Three
+        if: ${{ github.event.inputs.environment == 'ALL' }}
+        run: |
+          echo ${{ steps.tag_id.outputs.TAG }}
+          curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/IdoGvili/TaskOne/releases \
+          -d '{"tag_name":"test_v${{ github.event.inputs.version }}","name":"test_v${{ github.event.inputs.version }}","body":"${{ steps.tag_id.outputs.TAG }} release notes :${{ github.event.inputs.release_description }}","draft":false,"prerelease":false,"generate_release_notes":false}'
+          echo ${{ steps.tag_id.outputs.TAG }}
+          curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/IdoGvili/TaskOne/releases \
+          -d '{"tag_name":"staging_v${{ github.event.inputs.version }}","name":"$staging_v${{ github.event.inputs.version }}","body":"${{ steps.tag_id.outputs.TAG }} release notes :${{ github.event.inputs.release_description }}","draft":false,"prerelease":false,"generate_release_notes":false}'
+          echo ${{ steps.tag_id.outputs.TAG }}
+    
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
+
+      - name: Set up release data
+        id: releaseData
+        run: echo "::set-output name=releaseData::{\"tag_name\":\"${{ steps.tag_id.outputs.TAG }}\",\"name\":\"${{ steps.tag_id.outputs.TAG }}\",\"body\":\"${{ steps.tag_id.outputs.TAG }} release notes :${{ github.event.inputs.release_description }}\"}"
