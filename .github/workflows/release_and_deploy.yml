@@ -1,0 +1,189 @@
+name: "Release and Deploy"
+
+on:
+  workflow_dispatch:
+    branches:
+      - master
+      - develop
+    inputs:
+      environment:
+        type: choice
+        description: Environment
+        options:
+          - test
+          - staging
+          - production
+          - ALL
+      version:
+        description: 'Version'
+        required: true
+        default: '1.0'
+      release_description:
+        description: 'Release Description'
+        required: false
+        default: 'Description of the release'
+
+jobs:
+  release_and_deploy:
+    name: Release and Deploy
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - engage
+          - engage-tenant
+          - engage-admin
+
+    steps:
+      - name: Determine tag
+        id: tag_id
+        run: |
+          TAG=${{ github.event.inputs.environment }}_v${{ github.event.inputs.version }}
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create GitHub Release Not All
+        if: ${{ github.event.inputs.environment != 'ALL' }}
+        run: |
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/IdoGvili/TaskOne/releases \
+            -d '{"tag_name":"${{ steps.tag_id.outputs.TAG }}","name":"${{ steps.tag_id.outputs.TAG }}","body":"${{ steps.tag_id.outputs.TAG }} release notes :${{ github.event.inputs.release_description }}","draft":false,"prerelease":false,"generate_release_notes":false}'
+
+      - name: Create GitHub Release All Three
+        if: ${{ github.event.inputs.environment == 'ALL' }}
+        run: |
+          for env in test staging production; do
+            TAG=${env}_v${{ github.event.inputs.version }}
+            curl -L \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              https://api.github.com/repos/IdoGvili/TaskOne/releases \
+              -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":\"$TAG release notes :${{ github.event.inputs.release_description }}\",\"draft\":false,\"prerelease\":false,\"generate_release_notes\":false}"
+          done
+
+      - name: Assign default GitHub env variables
+        run: |
+          forced=$(if [[ ${{ github.ref_name }} == *-f ]]; then echo "true"; else echo "false"; fi)
+          echo forced=$forced >> $GITHUB_ENV
+
+          if [[ ${{ github.ref_name }} == test_* ]]; then
+            echo environment="test" >> $GITHUB_ENV
+            echo distId="E333ZBF8OB0KGL" >> $GITHUB_ENV
+            echo distUrl="https://d13imkh013nlqg.cloudfront.net" >> $GITHUB_ENV
+
+          elif [[ ${{ github.ref_name }} == staging_* ]]; then
+            echo environment="staging" >> $GITHUB_ENV
+            echo distId="E3DIJQC07QF41Q" >> $GITHUB_ENV
+            echo distUrl="https://d3tn5qru9slb7c.cloudfront.net" >> $GITHUB_ENV
+
+          elif [[ ${{ github.ref_name }} == production_* ]]; then
+            echo environment="production" >> $GITHUB_ENV
+            echo distId="E6TVK39UORE10" >> $GITHUB_ENV
+            echo distUrl="https://d34b54r33pmp3l.cloudfront.net" >> $GITHUB_ENV
+
+          fi
+
+      - name: Checkout to GitHub Actions runner
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate modulesCacheHash
+        run: |
+          modulesCacheHash=$(node ./scripts/hashFiles --filesPaths="./package.json ./yarn.lock ./packages/vi-${{ matrix.service }}/package.json ./packages/vi-${{ matrix.service }}/yarn.lock ./packages/vi-engage-common")
+          echo modulesCacheHash=$(echo $modulesCacheHash) >> $GITHUB_ENV
+          echo $modulesCacheHash
+
+      - name: Generate buildHash
+        run: |
+          buildHash="$(node ./scripts/hashFiles --filesPaths="./packages/vi-${{ matrix.service }} ./packages/vi-engage-common")-${{ env.modulesCacheHash }}"
+          echo buildHash=$(echo $buildHash) >> $GITHUB_ENV
+          echo $buildHash
+
+      - name: Get liveBuildHash
+        run: |
+          liveBuildHash=$(node ./scripts/getLiveBuildHash --serviceHtmlUrl="${{ env.distUrl }}/vi-${{ matrix.service }}/index.html")
+          echo liveBuildHash=$(echo $liveBuildHash) >> $GITHUB_ENV
+          echo $liveBuildHash
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Restore build cache
+        uses: vi-technologies/cache@v4
+        id: cache-build
+        if: ${{ env.forced != 'true' && env.buildHash == env.liveBuildHash }}
+        with:
+          path: packages/vi-${{ matrix.service }}/dist
+          key: ${{ runner.os }}-${{ env.buildHash }}
+          bucketName: vi-engage-modules-cache
+
+      - name: Restore unit-tests pass result cache
+        uses: vi-technologies/cache@v4
+        id: cache-unit-tests-pass-result
+        with:
+          path: packages/vi-${{ matrix.service }}/unit-tests-passed
+          key: ${{ runner.os }}-${{ env.buildHash }}-unit-tests-passed
+          bucketName: vi-engage-modules-cache
+
+      - name: Cache node modules
+        uses: vi-technologies/cache@v4
+        id: cache-node-modules
+        if: ${{ steps.cache-build.outputs.cache-hit != 'true' || steps.cache-unit-tests-pass-result.outputs.cache-hit != 'true' }}
+        with:
+          path: |
+            node_modules
+            packages/vi-engage-common/node_modules
+            packages/vi-${{ matrix.service }}/node_modules
+          key: ${{ runner.os }}-${{ env.modulesCacheHash }}
+          bucketName: vi-engage-modules-cache
+
+      - name: Install node modules
+        if: ${{ steps.cache-build.outputs.cache-hit != 'true' && steps.cache-node-modules.outputs.cache-hit != 'true' }}
+        run: yarn install 2>&1 | grep -v warning && yarn --cwd packages/vi-engage-common run bootstrap && yarn --cwd packages/vi-${{ matrix.service }} run bootstrap
+
+      - name: Run unit tests
+        id: unit-tests
+        if: ${{ steps.cache-unit-tests-pass-result.outputs.cache-hit != 'true' }}
+        run: |
+          cd ./packages/vi-${{ matrix.service }} && yarn unit-test
+          if [ $? -eq 0 ]; then
+            touch unit-tests-passed
+          else
+            echo "Tests failed. Exiting with a non-zero status code."
+            exit 1
+          fi
+
+      - name: Cache unit tests result
+        uses: vi-technologies/cache@v4
+        if: ${{ steps.cache-unit-tests-pass-result.outputs.cache-hit != 'true' && steps.unit-tests.outputs.exit-code == 0 }}
+        with:
+          path: packages/vi-${{ matrix.service }}/unit-tests-passed
+          key: ${{ runner.os }}-${{ env.buildHash }}-unit-tests-passed
+          bucketName: vi-engage-modules-cache
+
+      - name: Set VITE_BUILD_HASH env
+        if: ${{ steps.cache-build.outputs.cache-hit != 'true' }}
+        run: node ./scripts/setBuildHash --hash=${{ env.buildHash }} --servicePath="./packages/vi-${{ matrix.service }}"
+
+      - name: Build
+        if: ${{ steps.cache-build.outputs.cache-hit != 'true' }}
+        run: cd ./packages/vi-${{ matrix.service }} && yarn build
+
+      - name: Deploy
+        if: ${{ env.forced == 'true' || env.buildHash != env.liveBuildHash }}
+        run: |
+          aws s3 sync "./packages/vi-${{ matrix.service }}/dist" "s3://frontend-vi-engage-${{ env.environment }}/vi-${{ matrix.service }}" --delete
+          aws cloudfront create-invalidation --distribution-id ${{ env.distId }} --paths "/*"
