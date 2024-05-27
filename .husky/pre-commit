@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Check if package.json is staged for commit
+if git diff --cached --name-only | grep -q 'package.json'; then
+    # Check if package-lock.json exists
+    if [ ! -f "package-lock.json" ]; then
+        echo "Error: package-lock.json is missing. Please run 'npm install' or 'yarn install' to generate it."
+        exit 1
+    fi
+fi
+
+exit 0
